@@ -3,7 +3,8 @@ import streamlit as st
 import pandas as pd
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
+import pytz
 from PIL import Image
 import logging
 from pathlib import Path
@@ -167,7 +168,9 @@ def save_annotation(annotator_id, item_id, annotation, current_item):
     logger.debug(f"Starting save_annotation for item {item_id}")
     annotations_dir, _ = get_annotator_dirs(annotator_id)
     jsonl_file = os.path.join(annotations_dir, f"{annotator_id}_annotations.jsonl")
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Get current time in German timezone
+    german_tz = pytz.timezone('Europe/Berlin')
+    timestamp = datetime.now(german_tz).strftime("%Y%m%d_%H%M%S")
     
     annotation_data = {
         "annotator_id": annotator_id,
@@ -311,7 +314,9 @@ def update_annotation(annotator_id, item_id, new_annotation, current_item):
     """Update an existing annotation"""
     annotations_dir, _ = get_annotator_dirs(annotator_id)
     jsonl_file = os.path.join(annotations_dir, f"{annotator_id}_annotations.jsonl")
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Get current time in German timezone
+    german_tz = pytz.timezone('Europe/Berlin')
+    timestamp = datetime.now(german_tz).strftime("%Y%m%d_%H%M%S")
     
     # Read all annotations
     annotations = get_previous_annotations(annotator_id)
@@ -487,19 +492,19 @@ def main():
         st.write(f"Remaining items: {len(assigned_items) - total_annotations}")
         
         # Add intermediate save button
-        if temp_annotations_count > 0:
-            # st.write(f"Temporary annotations: {temp_annotations_count}")
-            if st.button("💾 Save Progress", help="Save your current annotations to Google Drive"):
-                with st.spinner("Saving annotations..."):
-                    success = save_all_temporary_annotations(annotator_id)
-                    if success:
-                        st.success(f"Successfully saved {temp_annotations_count} annotations!")
-                        # Update counters
-                        st.session_state.submitted_annotations += temp_annotations_count
-                        st.session_state.temp_annotations = {}
-                        st.rerun()
-                    else:
-                        st.error("Failed to save annotations. Please try again.")
+        # if temp_annotations_count > 0:
+        #     # st.write(f"Temporary annotations: {temp_annotations_count}")
+        #     if st.button("💾 Save Progress", help="Save your current annotations to Google Drive"):
+        #         with st.spinner("Saving annotations..."):
+        #             success = save_all_temporary_annotations(annotator_id)
+        #             if success:
+        #                 st.success(f"Successfully saved {temp_annotations_count} annotations!")
+        #                 # Update counters
+        #                 st.session_state.submitted_annotations += temp_annotations_count
+        #                 st.session_state.temp_annotations = {}
+        #                 st.rerun()
+        #             else:
+        #                 st.error("Failed to save annotations. Please try again.")
     
     # Main content area
     st.title("Nepali Facebook Claim Annotation")
@@ -628,7 +633,9 @@ def main():
                 "checkworthiness": checkworthiness if claim_status == "Claim" else None
             }
             
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            # Get current time in German timezone
+            german_tz = pytz.timezone('Europe/Berlin')
+            timestamp = datetime.now(german_tz).strftime("%Y%m%d_%H%M%S")
             st.session_state.temp_annotations[current_item['id']] = {
                 "annotator_id": annotator_id,
                 "item_id": current_item['id'],
