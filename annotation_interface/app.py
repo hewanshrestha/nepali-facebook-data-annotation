@@ -135,6 +135,20 @@ st.markdown("""
         gap: 40px;
         margin: 20px 0;
     }
+    div[data-testid="stButton"] button {
+        font-size: 20px;
+        padding: 15px 30px;
+        height: auto;
+    }
+    .nav-buttons {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+    .nav-buttons button {
+        width: 100%;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -520,11 +534,30 @@ def main():
     
     # Get current item
     if st.session_state.current_index >= len(assigned_items):
-        st.success("Congratulations! You have completed all annotations.")
+        st.markdown("""
+            <div style="color: #00a86b; font-weight: bold; font-size: 25px; margin: 15px 0; padding: 10px; border-left: 4px solid #00a86b; background-color: #e6f7f0; display: inline-block; width: fit-content;">
+                Congratulations! You have completed all annotations.
+            </div>
+        """, unsafe_allow_html=True)
         
         # Add Submit All button below congratulations message
         if len(st.session_state.temp_annotations) > 0:
-            st.info(f"You have {len(st.session_state.temp_annotations)} unsaved annotations.")
+            st.markdown(f"""
+                <div style="color: #0066cc; font-weight: bold; font-size: 25px; margin: 15px 0; padding: 10px; border-left: 4px solid #0066cc; background-color: #e6f0ff; display: inline-block; width: fit-content;">
+                    You have {len(st.session_state.temp_annotations)} unsaved annotations.
+                </div>
+            """, unsafe_allow_html=True)
+            st.markdown("""
+                <style>
+                    div[data-testid="stButton"] button {
+                        padding: 20px 40px;
+                        height: auto;
+                    }
+                    div[data-testid="stButton"] button p {
+                        font-size: 20px !important;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
             if st.button("Submit All Annotations", type="primary"):
                 with st.spinner("Submitting all annotations..."):
                     success = save_all_temporary_annotations(annotator_id)
@@ -537,12 +570,16 @@ def main():
                     else:
                         st.error("Failed to submit annotations. Please try again.")
         else:
-            st.info("All annotations have been submitted!")
+            st.markdown("""
+                <div style="color: #00a86b; font-weight: bold; font-size: 25px; margin: 15px 0; padding: 10px; border-left: 4px solid #00a86b; background-color: #e6f7f0; display: inline-block; width: fit-content;">
+                    All annotations have been submitted!
+                </div>
+            """, unsafe_allow_html=True)
         return
     
     # Display important note in red (only when not on congratulations page)
     st.markdown("""
-        <div style="color: #ff0000; font-weight: bold; font-size: 16px; margin: 15px 0; padding: 10px; border-left: 4px solid #ff0000; background-color: #fff0f0;">
+        <div style="color: #ff0000; font-weight: bold; font-size: 25px; margin: 15px 0; padding: 10px; border-left: 4px solid #ff0000; background-color: #fff0f0; display: inline-block; width: fit-content;">
             Note: Consider both the image and text together when making your decision
         </div>
     """, unsafe_allow_html=True)
@@ -618,35 +655,37 @@ def main():
         )
 
     # Navigation buttons
-    col1, col2 = st.columns([1, 1])
+    st.markdown("""
+        <div class="nav-buttons">
+    """, unsafe_allow_html=True)
     
-    with col1:
-        if st.button("Previous", disabled=st.session_state.current_index == 0):
-            st.session_state.current_index -= 1
-            st.rerun()
+    if st.button("Previous", disabled=st.session_state.current_index == 0):
+        st.session_state.current_index -= 1
+        st.rerun()
     
-    with col2:
-        if st.button("Next"):
-            # Save current annotation to temporary storage
-            annotation = {
-                "claim_status": claim_status,
-                "checkworthiness": checkworthiness if claim_status == "Claim" else None
-            }
-            
-            # Get current time in German timezone
-            german_tz = pytz.timezone('Europe/Berlin')
-            timestamp = datetime.now(german_tz).strftime("%Y%m%d_%H%M%S")
-            st.session_state.temp_annotations[current_item['id']] = {
-                "annotator_id": annotator_id,
-                "item_id": current_item['id'],
-                "timestamp": timestamp,
-                "text": current_item["text"],
-                "image_id": current_item["image_id"],
-                "annotation": annotation
-            }
-            
-            st.session_state.current_index += 1
-            st.rerun()
+    if st.button("Next"):
+        # Save current annotation to temporary storage
+        annotation = {
+            "claim_status": claim_status,
+            "checkworthiness": checkworthiness if claim_status == "Claim" else None
+        }
+        
+        # Get current time in German timezone
+        german_tz = pytz.timezone('Europe/Berlin')
+        timestamp = datetime.now(german_tz).strftime("%Y%m%d_%H%M%S")
+        st.session_state.temp_annotations[current_item['id']] = {
+            "annotator_id": annotator_id,
+            "item_id": current_item['id'],
+            "timestamp": timestamp,
+            "text": current_item["text"],
+            "image_id": current_item["image_id"],
+            "annotation": annotation
+        }
+        
+        st.session_state.current_index += 1
+        st.rerun()
+    
+    st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
