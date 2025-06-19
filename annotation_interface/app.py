@@ -149,127 +149,6 @@ st.markdown("""
     .nav-buttons button {
         width: 100%;
     }
-    .centered-login {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 80vh;
-    }
-    .login-box {
-        background: #fffbe6;
-        border: 2px solid #d4af37;
-        border-radius: 12px;
-        padding: 40px 50px 30px 50px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        min-width: 550px;
-    }
-    .login-title {
-        font-size: 2rem;
-        font-weight: bold;
-        margin-bottom: 20px;
-        color: #333;
-        text-align: center;
-    }
-    .login-outer-center {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 80vh;
-        height: 80vh;
-    }
-    .login-form-compact {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        max-width: 500px;
-        width: 100%;
-    }
-    .login-label {
-        font-size: 1.1rem;
-        color: #333;
-        margin-bottom: 8px;
-        text-align: left;
-    }
-    .center-login-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        height: 100vh;
-    }
-    /* Remove Streamlit's default padding and set full height */
-    .block-container {
-        padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
-        height: 100vh;
-    }
-    /* Center everything in the main area */
-    .center-login-viewport {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        height: 100vh;
-    }
-    .login-row {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 16px;
-        border: none !important;
-        background: none !important;
-        box-shadow: none !important;
-        min-width: 0 !important;
-    }
-    .login-label-inline {
-        font-size: 1.1rem;
-        color: #333;
-        margin-right: 12px;
-        min-width: 150px;
-        text-align: left;
-        background: none !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-    .login-input-inline input {
-        width: 350px !important;
-        min-width: 200px;
-        max-width: 100%;
-        font-size: 1.1rem;
-        background: none !important;
-        border: 1px solid #ccc;
-        box-shadow: none !important;
-    }
-    /* Remove any border, background, or box-shadow from the login area and menu */
-    .center-login-viewport, .login-form-compact, .centered-login, .login-box, .login-outer-center, .center-login-container {
-        border: none !important;
-        box-shadow: none !important;
-        background: none !important;
-        min-width: 0 !important;
-    }
-    /* Remove border/background from Streamlit form and widget containers */
-    [data-testid="stForm"], [data-testid="stForm"] > div, [data-testid="stVerticalBlock"] {
-        background: none !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-    /* Remove border/background from the main widget block */
-    section.main > div {
-        background: none !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-    /* Remove border/background from the main block container */
-    .block-container {
-        background: none !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -573,8 +452,6 @@ def save_all_temporary_annotations(annotator_id):
 
 def main():
     # Initialize session state with separate tracking variables
-    if 'annotator_id' not in st.session_state:
-        st.session_state.annotator_id = None
     if 'current_item' not in st.session_state:
         st.session_state.current_item = None
     if 'is_previous' not in st.session_state:
@@ -589,108 +466,36 @@ def main():
         st.session_state.current_index = 0
     if 'submitted_annotations' not in st.session_state:
         st.session_state.submitted_annotations = 0
+    
+    # Use separate tracking variables (NOT widget keys)
     if 'display_claim_status' not in st.session_state:
         st.session_state.display_claim_status = "No Claim"
     if 'display_checkworthiness' not in st.session_state:
         st.session_state.display_checkworthiness = "Checkworthy"
 
-    # Show only the login interface in the center of the page if not logged in
-    if st.session_state.annotator_id is None:
-        st.markdown("""
-            <style>
-            .block-container {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                min-height: 100vh;
-                height: 100vh;
-                padding-top: 0 !important;
-                padding-bottom: 0 !important;
-            }
-            .login-row {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: center;
-                margin-bottom: 16px;
-                border: none !important;
-                background: none !important;
-                box-shadow: none !important;
-                min-width: 0 !important;
-            }
-            .login-label-inline {
-                font-size: 1.1rem;
-                color: #333;
-                margin-right: 12px;
-                min-width: 150px;
-                text-align: left;
-                background: none !important;
-                border: none !important;
-                box-shadow: none !important;
-            }
-            .login-input-inline input {
-                width: 350px !important;
-                min-width: 200px;
-                max-width: 100%;
-                font-size: 1.1rem;
-                background: none !important;
-                border: 1px solid #ccc;
-                box-shadow: none !important;
-            }
-            /* Remove any border, background, or box-shadow from the login area and menu */
-            .center-login-viewport, .login-form-compact, .centered-login, .login-box, .login-outer-center, .center-login-container {
-                border: none !important;
-                box-shadow: none !important;
-                background: none !important;
-                min-width: 0 !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
-        st.markdown('<h2 style="font-size: 2rem; font-weight: bold; margin-bottom: 20px; color: #333; text-align: center;">Annotator Login</h2>', unsafe_allow_html=True)
-        with st.form("login_form", clear_on_submit=False):
-            col1, col2 = st.columns([0.45, 0.55])
-            with col1:
-                st.markdown('<div style="font-size: 1.1rem; color: #333; text-align: left; margin-top: 6px;">Enter the annotator id:</div>', unsafe_allow_html=True)
-            with col2:
-                annotator_id = st.text_input(
-                    "Enter your annotator ID:",
-                    key="login_id",
-                    label_visibility="collapsed",
-                    placeholder=""
-                )
-            # Reduce vertical gap before button
-            st.markdown('<div style="height: 8px;"></div>', unsafe_allow_html=True)
-            login_clicked = st.form_submit_button("Login")
-            if login_clicked:
-                if annotator_id in VALID_ANNOTATORS:
-                    st.session_state.annotator_id = annotator_id
-                    st.rerun()
-                else:
-                    st.error(f"Invalid annotator ID. Please use one of: {', '.join(VALID_ANNOTATORS)}")
-        return
-
-    annotator_id = st.session_state.annotator_id
-
-    # Restore padding after login so header is not cut off
-    st.markdown("""
-        <style>
-        .block-container {
-            padding-top: 2.5rem !important;
-            padding-bottom: 1.5rem !important;
-            height: auto !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # Sidebar for annotator info, guidelines, and progress (only after login)
+    # Sidebar for annotator login and guidelines
     with st.sidebar:
         st.title("Annotation Interface")
-        st.write(f"Logged in as: {annotator_id}")
+        
+        # Annotator login
+        annotator_id = st.text_input("Enter your annotator ID:")
+        if not annotator_id:
+            st.warning("Please enter your annotator ID to begin.")
+            return
+        
+        # Validate annotator ID
+        if annotator_id not in VALID_ANNOTATORS:
+            st.error(f"Invalid annotator ID. Please use one of: {', '.join(VALID_ANNOTATORS)}")
+            return
+        
+        # Set up logging for the selected annotator
+        logger = setup_logging(annotator_id)
+        
         # Guidelines
         st.header("Guidelines")
         guidelines = load_guidelines()
         st.markdown(guidelines)
+        
         # Progress tracking
         st.header("Your Progress")
         assigned_items = get_annotator_items(load_dataset(), annotator_id)
@@ -699,8 +504,23 @@ def main():
         st.write(f"Total annotations: {total_annotations}")
         st.write(f"Total items assigned: {len(assigned_items)}")
         st.write(f"Remaining items: {len(assigned_items) - total_annotations}")
-
-    # Main content area (annotation interface)
+        
+        # Add intermediate save button
+        # if temp_annotations_count > 0:
+        #     # st.write(f"Temporary annotations: {temp_annotations_count}")
+        #     if st.button("💾 Save Progress", help="Save your current annotations to Google Drive"):
+        #         with st.spinner("Saving annotations..."):
+        #             success = save_all_temporary_annotations(annotator_id)
+        #             if success:
+        #                 st.success(f"Successfully saved {temp_annotations_count} annotations!")
+        #                 # Update counters
+        #                 st.session_state.submitted_annotations += temp_annotations_count
+        #                 st.session_state.temp_annotations = {}
+        #                 st.rerun()
+        #             else:
+        #                 st.error("Failed to save annotations. Please try again.")
+    
+    # Main content area
     st.title("Nepali Facebook Claim Annotation")
     
     # Load dataset
