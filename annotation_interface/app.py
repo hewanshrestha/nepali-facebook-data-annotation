@@ -33,8 +33,8 @@ st.set_page_config(
 )
 
 # Constants
-IMAGES_DIR = "pilot_data/images"
-DATASET_FILE = "pilot_data/filtered_posts.json"
+IMAGES_DIR = "pilot_data_new/images"
+DATASET_FILE = "pilot_data_new/pilot_data.json"
 BASE_DIR = "annotation_interface"
 GUIDELINES_FILE = "annotation_interface/guidelines.md"
 USE_GOOGLE_DRIVE = True  # Set to False to use local storage only
@@ -77,77 +77,88 @@ def setup_logging(annotator_id):
 # Custom CSS (without .stRadio to avoid interference)
 st.markdown("""
 <style>
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+    div[data-testid="stHorizontalBlock"] {
+        gap: 2rem;
+    }
     .claim-text-box {
         background-color: #fffbe6;
-        border: 3px solid #d4af37;
-        border-radius: 12px;
-        padding: 25px;
-        margin: 0 0 30px 0;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        max-width: 800px;
-        width: fit-content;
-        min-width: 300px;
+        border: 2px solid #d4af37;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 1rem;
     }
     .claim-text {
-        font-size: 20px;
+        font-size: 18px;
         line-height: 1.6;
-        font-weight: 500;
-        color: #333;
         font-family: 'Noto Sans Devanagari', Arial, sans-serif;
-        text-align: justify;
-        white-space: pre-wrap;
-        word-wrap: break-word;
+    }
+    .step-box, .step-box-2 {
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        border-radius: 4px;
     }
     .step-box {
         background-color: #e3f2fd;
         border-left: 4px solid #1976d2;
-        padding: 10px 15px;
-        margin: 0 0 15px 0;
-        border-radius: 4px;
-        max-width: 800px;
-        width: fit-content;
     }
     .step-box-2 {
         background-color: #fff3e0;
         border-left: 4px solid #f57c00;
-        padding: 10px 15px;
-        margin: 0 0 15px 0;
-        border-radius: 4px;
-        max-width: 800px;
-        width: fit-content;
     }
-    .step-text {
+    .step-text, .step-text-2 {
         font-size: 14px;
         font-weight: 500;
-        color: #0d47a1;
         margin: 0;
         line-height: 1.4;
     }
-    .step-text-2 {
-        font-size: 14px;
-        font-weight: 500;
-        color: #e65100;
-        margin: 0;
-        line-height: 1.4;
-    }
-    .choice-container {
-        display: flex;
-        gap: 40px;
-        margin: 20px 0;
-    }
+    .step-text { color: #0d47a1; }
+    .step-text-2 { color: #e65100; }
     div[data-testid="stButton"] button {
-        font-size: 20px;
-        padding: 15px 30px;
-        height: auto;
+        width: 100%;
+        font-size: 16px;
+        padding: 10px 0;
     }
     .nav-buttons {
+        margin-top: 20px;
         display: flex;
         flex-direction: column;
-        width: 100%;
         gap: 10px;
     }
-    .nav-buttons button {
-        width: 100%;
+    div[data-testid="stImage"] img {
+        max-width: 80%;
+        margin: 0 auto;
+        display: block;
+    }
+    
+    /* Responsive Design for smaller screens */
+    @media (max-width: 992px) {
+        div[data-testid="stHorizontalBlock"] {
+            flex-direction: column;
+        }
+        .block-container {
+            padding-top: 1rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 28px !important;
+        }
+        .note-box {
+            font-size: 16px !important;
+            padding: 10px !important;
+        }
+        .claim-text {
+            font-size: 16px;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -172,6 +183,8 @@ def load_dataset():
         # Convert to DataFrame and add unique IDs
         df = pd.DataFrame(data)
         df['id'] = [f"item_{i}" for i in range(len(df))]
+        # Shuffle the DataFrame so codemixed and monolingual samples are mixed
+        df = df.sample(frac=1, random_state=42).reset_index(drop=True)
         return df
     except Exception as e:
         st.error(f"Error loading dataset: {str(e)}")
@@ -269,22 +282,8 @@ def get_annotation_progress(annotator_id):
     return annotations
 
 def get_annotator_items(df, annotator_id):
-    """Get the items assigned to a specific annotator"""
-    # Get the annotator number (e.g., "01" from "annotator_01")
-    annotator_num = int(annotator_id.split('_')[1])
-    total_annotators = len(VALID_ANNOTATORS)
-    
-    # Calculate the items per annotator
-    total_items = len(df)
-    items_per_annotator = total_items // total_annotators
-    
-    # Calculate the start and end indices for this annotator
-    start_idx = (annotator_num - 1) * items_per_annotator
-    end_idx = start_idx + items_per_annotator if annotator_num < total_annotators else total_items
-    
-    # Get the assigned items
-    assigned_items = df.iloc[start_idx:end_idx].copy()
-    return assigned_items
+    """Get the items assigned to a specific annotator. Now returns all items for all annotators."""
+    return df.copy()
 
 def get_next_unannotated_item(annotator_id, df):
     """Get the next unannotated item for the annotator from their assigned items"""
@@ -579,7 +578,7 @@ def main():
     
     # Display important note in red (only when not on congratulations page)
     st.markdown("""
-        <div style="color: #ff0000; font-weight: bold; font-size: 25px; margin: 15px 0; padding: 10px; border-left: 4px solid #ff0000; background-color: #fff0f0; display: inline-block; width: fit-content;">
+        <div class="note-box" style="color: #ff0000; font-weight: bold; font-size: 22px; margin: 15px 0; padding: 10px; border-left: 4px solid #ff0000; background-color: #fff0f0; display: inline-block; width: fit-content;">
             Note: Consider both the image and text together when making your decision
         </div>
     """, unsafe_allow_html=True)
@@ -597,95 +596,96 @@ def main():
         st.session_state.display_claim_status = "No Claim"
         st.session_state.display_checkworthiness = "Checkworthy"
 
-    # Display text
-    st.markdown('<h3 style="margin: 0 0 10px 0;">Claim Text</h3>', unsafe_allow_html=True)
-    st.markdown(f'''
-        <div class="claim-text-box">
-            <div class="claim-text">{current_item["text"]}</div>
-        </div>
-    ''', unsafe_allow_html=True)
-    
-    # Display image
-    st.markdown('<h3 style="margin: 0 0 10px 0;">Associated Image</h3>', unsafe_allow_html=True)
-    try:
-        image_path = os.path.join(IMAGES_DIR, current_item['image_id'])
-        image = Image.open(image_path)
-        st.image(image, width=600)
-        st.write("")
-    except Exception as e:
-        st.error(f"Error loading image: {str(e)}")
-    
-    # Annotation form
-    st.markdown('<h3 style="margin: 0 0 10px 0;">Label the Claim</h3>', unsafe_allow_html=True)
-    
-    # Step 1: Claim Detection
-    st.markdown('''
-        <div class="step-box">
-            <p class="step-text"><b>Task 1: Claim Detection</b> <br><br> Please read the text above and examine the image. Does this content make a factual claim that can be verified?</p>
-        </div>
-    ''', unsafe_allow_html=True)
-    
-    claim_options = ["Claim", "No Claim"]
-    claim_index = 0 if st.session_state.display_claim_status == "Claim" else 1
-    claim_status = st.radio(
-        "Is this a claim?",
-        claim_options,
-        index=claim_index,
-        horizontal=True,
-        label_visibility="collapsed"
-    )
+    # --- Two-Column Layout ---
+    col1, col2 = st.columns([3, 2])
 
-    # Task 2: Checkworthiness Detection
-    checkworthiness = None
-    if claim_status == "Claim":
-        st.markdown('''
-            <div class="step-box-2">
-                <p class="step-text-2"><b>Task 2: Checkworthiness Detection</b> <br><br> Since you selected 'Claim', please determine if this claim is worth fact-checking. Consider the potential impact and verifiability of the statement.</p>
+    with col1:
+        # Display text
+        st.markdown('<h5>Claim Text & Image</h5>', unsafe_allow_html=True)
+        st.markdown(f'''
+            <div class="claim-text-box">
+                <div class="claim-text">{current_item["text"]}</div>
             </div>
         ''', unsafe_allow_html=True)
-        
-        checkworthy_options = ["Checkworthy", "Not Checkworthy"]
-        checkworthy_index = 0 if st.session_state.display_checkworthiness == "Checkworthy" else 1
-        checkworthiness = st.radio(
-            "Is this claim checkworthy?",
-            checkworthy_options,
-            index=checkworthy_index,
+    
+        # Display image
+        try:
+            image_path = os.path.join(IMAGES_DIR, current_item['image_id'])
+            image = Image.open(image_path)
+            st.image(image, use_container_width=True)
+        except Exception as e:
+            st.error(f"Error loading image: {str(e)}")
+
+    with col2:
+        # Annotation form
+        st.markdown('<h5>Label the Claim</h5>', unsafe_allow_html=True)
+    
+        # Step 1: Claim Detection
+        st.markdown('''
+            <div class="step-box">
+                <p class="step-text"><b>Task 1: Claim Detection</b> <br> Does this content make a factual claim that can be verified?</p>
+            </div>
+        ''', unsafe_allow_html=True)
+    
+        claim_options = ["Claim", "No Claim"]
+        claim_index = 0 if st.session_state.display_claim_status == "Claim" else 1
+        claim_status = st.radio(
+            "Is this a claim?",
+            claim_options,
+            index=claim_index,
             horizontal=True,
             label_visibility="collapsed"
         )
 
-    # Navigation buttons
-    st.markdown("""
-        <div class="nav-buttons">
-    """, unsafe_allow_html=True)
-    
-    if st.button("Previous", disabled=st.session_state.current_index == 0):
-        st.session_state.current_index -= 1
-        st.rerun()
-    
-    if st.button("Next"):
-        # Save current annotation to temporary storage
-        annotation = {
-            "claim_status": claim_status,
-            "checkworthiness": checkworthiness if claim_status == "Claim" else None
-        }
+        # Task 2: Checkworthiness Detection
+        checkworthiness = None
+        if claim_status == "Claim":
+            st.markdown('''
+                <div class="step-box-2">
+                    <p class="step-text-2"><b>Task 2: Checkworthiness Detection</b> <br> Since you selected 'Claim', please determine if this claim is worth fact-checking. Consider the potential impact and verifiability of the statement.</p>
+                </div>
+            ''', unsafe_allow_html=True)
         
-        # Get current time in German timezone
-        german_tz = pytz.timezone('Europe/Berlin')
-        timestamp = datetime.now(german_tz).strftime("%Y%m%d_%H%M%S")
-        st.session_state.temp_annotations[current_item['id']] = {
-            "annotator_id": annotator_id,
-            "item_id": current_item['id'],
-            "timestamp": timestamp,
-            "text": current_item["text"],
-            "image_id": current_item["image_id"],
-            "annotation": annotation
-        }
-        
-        st.session_state.current_index += 1
-        st.rerun()
+            checkworthy_options = ["Checkworthy", "Not Checkworthy"]
+            checkworthy_index = 0 if st.session_state.display_checkworthiness == "Checkworthy" else 1
+            checkworthiness = st.radio(
+                "Is this claim checkworthy?",
+                checkworthy_options,
+                index=checkworthy_index,
+                horizontal=True,
+                label_visibility="collapsed"
+            )
+
+        # Navigation buttons
+        st.markdown("""<div class="nav-buttons">""", unsafe_allow_html=True)
     
-    st.markdown("</div>", unsafe_allow_html=True)
+        if st.button("Previous", disabled=st.session_state.current_index == 0):
+            st.session_state.current_index -= 1
+            st.rerun()
+    
+        if st.button("Next"):
+            # Save current annotation to temporary storage
+            annotation = {
+                "claim_status": claim_status,
+                "checkworthiness": checkworthiness if claim_status == "Claim" else None
+            }
+        
+            # Get current time in German timezone
+            german_tz = pytz.timezone('Europe/Berlin')
+            timestamp = datetime.now(german_tz).strftime("%Y%m%d_%H%M%S")
+            st.session_state.temp_annotations[current_item['id']] = {
+                "annotator_id": annotator_id,
+                "item_id": current_item['id'],
+                "timestamp": timestamp,
+                "text": current_item["text"],
+                "image_id": current_item["image_id"],
+                "annotation": annotation
+            }
+        
+            st.session_state.current_index += 1
+            st.rerun()
+    
+        st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()

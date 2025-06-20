@@ -41,7 +41,7 @@ annotation_interface/service-account.json
 annotation_interface/annotator_*/
 *.log
 uv.lock
-dataset(copy)/
+final_dataset/
 checkpoints/
 
 # OS specific
