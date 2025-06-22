@@ -471,6 +471,8 @@ def main():
         st.session_state.display_claim_status = "No Claim"
     if 'display_checkworthiness' not in st.session_state:
         st.session_state.display_checkworthiness = "Checkworthy"
+    if 'display_topic' not in st.session_state:
+        st.session_state.display_topic = "Politics"
 
     # Sidebar for annotator login and guidelines
     with st.sidebar:
@@ -592,9 +594,12 @@ def main():
         st.session_state.display_claim_status = temp_ann['annotation']['claim_status']
         if temp_ann['annotation']['claim_status'] == "Claim":
             st.session_state.display_checkworthiness = temp_ann['annotation']['checkworthiness']
+        # Pre-fill topic if available
+        st.session_state.display_topic = temp_ann['annotation'].get('topic', "Politics")
     else:
         st.session_state.display_claim_status = "No Claim"
-        st.session_state.display_checkworthiness = "Checkworthy"
+        st.session_state.display_checkworthiness = "Check-worthy"
+        st.session_state.display_topic = "Politics"
 
     # --- Two-Column Layout ---
     col1, col2 = st.columns([3, 2])
@@ -617,13 +622,34 @@ def main():
             st.error(f"Error loading image: {str(e)}")
 
     with col2:
+        # Topic Classification
+        st.markdown('<h5>Label the Topic</h5>', unsafe_allow_html=True)
+        
+        st.markdown('''
+            <div class="step-box">
+                <p class="step-text"><b>Topic Classification</b> <br> What is the main topic of this content?</p>
+            </div>
+        ''', unsafe_allow_html=True)
+        
+        topic_options = ["Politics", "Natural Disasters", "Health", "Sports", "Entertainment", "Other"]
+        topic_index = topic_options.index(st.session_state.display_topic) if st.session_state.display_topic in topic_options else 0
+        topic = st.radio(
+            "Select the topic:",
+            topic_options,
+            index=topic_index,
+            horizontal=True,
+            label_visibility="collapsed"
+        )
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
         # Annotation form
         st.markdown('<h5>Label the Claim</h5>', unsafe_allow_html=True)
     
         # Step 1: Claim Detection
         st.markdown('''
             <div class="step-box">
-                <p class="step-text"><b>Task 1: Claim Detection</b> <br> Does this content make a factual claim that can be verified?</p>
+                <p class="step-text"><b>Q1: Claim Detection</b> <br> Does the image-text pair make a factual claim that can be verified?</p>
             </div>
         ''', unsafe_allow_html=True)
     
@@ -642,14 +668,14 @@ def main():
         if claim_status == "Claim":
             st.markdown('''
                 <div class="step-box-2">
-                    <p class="step-text-2"><b>Task 2: Checkworthiness Detection</b> <br> Since you selected 'Claim', please determine if this claim is worth fact-checking. Consider the potential impact and verifiability of the statement.</p>
+                    <p class="step-text-2"><b>Q2: Checkworthiness Detection</b> <br> If "Claim" to Q1, does it present content that is harmful, up-to-date, urgent or breaking news information or likely to mislead the public and therefore worth fact-checking? </p>
                 </div>
             ''', unsafe_allow_html=True)
         
-            checkworthy_options = ["Checkworthy", "Not Checkworthy"]
-            checkworthy_index = 0 if st.session_state.display_checkworthiness == "Checkworthy" else 1
+            checkworthy_options = ["Check-worthy", "Not Check-worthy"]
+            checkworthy_index = 0 if st.session_state.display_checkworthiness == "Check-worthy" else 1
             checkworthiness = st.radio(
-                "Is this claim checkworthy?",
+                "Is this claim check-worthy?",
                 checkworthy_options,
                 index=checkworthy_index,
                 horizontal=True,
@@ -666,6 +692,7 @@ def main():
         if st.button("Next"):
             # Save current annotation to temporary storage
             annotation = {
+                "topic": topic,
                 "claim_status": claim_status,
                 "checkworthiness": checkworthiness if claim_status == "Claim" else None
             }
