@@ -40,7 +40,7 @@ GUIDELINES_FILE = "annotation_interface/guidelines.md"
 USE_GOOGLE_DRIVE = True  # Set to False to use local storage only
 
 # Valid annotator IDs
-VALID_ANNOTATORS = [f"annotator_{i:02d}" for i in range(1, 5)]  # Creates annotator_01 through annotator_04
+VALID_ANNOTATORS = [f"annotator_{i:02d}" for i in range(1, 6)]  # Creates annotator_01 through annotator_05
 
 def get_annotator_dirs(annotator_id):
     """Get the annotation and log directories for an annotator"""
