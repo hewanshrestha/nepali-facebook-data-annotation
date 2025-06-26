@@ -631,7 +631,7 @@ def main():
             </div>
         ''', unsafe_allow_html=True)
         
-        topic_options = ["Politics", "Natural Disasters", "Health", "Sports", "Entertainment", "Other"]
+        topic_options = ["Politics", "Natural Disasters", "Health", "Sports", "Entertainment", "Eduation", "Culture","Other"]
         topic_index = topic_options.index(st.session_state.display_topic) if st.session_state.display_topic in topic_options else 0
         topic = st.radio(
             "Select the topic:",
